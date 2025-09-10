@@ -14,19 +14,96 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Este schema define as tabelas do backend do app de tracker de hábitos.
+// Ele inclui:
+// 1. Usuario: dados de cada usuário do app (login, email, senha, etc.)
+// 2. Habito: hábitos criados por cada usuário, com frequência e descrição
+// 3. RegistroHabito: histórico de hábitos completados, vinculado a usuário e hábito
+// 4. CategoriaHabito: categorias para organizar hábitos (ex: saúde, trabalho)
+// 5. Meta: metas vinculadas a hábitos (ex: correr 5km/semana)
+// 6. Estatistica: resumo diário/semanal do progresso do usuário
+//
+// Todas as tabelas estão relacionadas de forma a permitir:
+// - múltiplos hábitos por usuário
+// - múltiplos registros de conclusão por hábito
+// - associação de hábitos a categorias e metas
+// - fácil extração de estatísticas e histórico
+//
+// Este schema é a base para criar o backend com Prisma, gerar o client e
+// manipular dados de forma segura e tipada em Node.js/Express.
+
+// ========== TABELA DE USUÁRIOS ==========
 model Usuario {
-  id        Int      @id @default(autoincrement())
-  nome      String
-  email     String   @unique
-  senha     String
-  criadoEm  DateTime @default(now())
-  habitos   Habito[]
+  id       Int      @id @default(autoincrement())
+  nome     String
+  email    String   @unique
+  senha    String
+  criadoEm DateTime @default(now())
+
+  habitos      Habito[]
+  registros    RegistroHabito[]
+  categorias   CategoriaHabito[]
+  metas        Meta[]
+  estatisticas Estatistica[]
 }
 
+// ========== TABELA DE HÁBITOS ==========
 model Habito {
+  id         Int      @id @default(autoincrement())
+  titulo     String
+  usuarioId  Int
+  criadoEm   DateTime @default(now())
+  frequencia String // ex: "diario", "semanal", "segunda,quarta,sexta"
+
+  usuario     Usuario          @relation(fields: [usuarioId], references: [id])
+  registros   RegistroHabito[]
+  categoriaId Int?
+  categoria   CategoriaHabito? @relation(fields: [categoriaId], references: [id])
+  metas       Meta[]
+}
+
+// ========== TABELA DE REGISTRO DE HÁBITOS ==========
+model RegistroHabito {
   id        Int      @id @default(autoincrement())
-  titulo    String
-  criadoEm  DateTime @default(now())
+  habitoId  Int
   usuarioId Int
-  usuario   Usuario  @relation(fields: [usuarioId], references: [id])
-} 
+  data      DateTime
+  status    Boolean  @default(true) // true = concluído
+
+  habito  Habito  @relation(fields: [habitoId], references: [id])
+  usuario Usuario @relation(fields: [usuarioId], references: [id])
+}
+
+// ========== TABELA DE CATEGORIA DE HÁBITOS ==========
+model CategoriaHabito {
+  id        Int    @id @default(autoincrement())
+  nome      String
+  usuarioId Int
+
+  usuario Usuario  @relation(fields: [usuarioId], references: [id])
+  habitos Habito[]
+}
+
+// ========== TABELA DE METAS ==========
+model Meta {
+  id       Int    @id @default(autoincrement())
+  titulo   String
+  habitoId Int
+  valor    Int // quantidade/metas 
+  periodo  String // ex: "semanal", "mensal"
+
+  habito    Habito  @relation(fields: [habitoId], references: [id])
+  usuario   Usuario @relation(fields: [usuarioId], references: [id])
+  usuarioId Int
+}
+
+// ========== TABELA DE ESTATÍSTICAS ==========
+model Estatistica {
+  id                Int      @id @default(autoincrement())
+  usuarioId         Int
+  data              DateTime
+  habitosConcluidos Int
+  totalHabitos      Int
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id])
+}
