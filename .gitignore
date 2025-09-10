@@ -4,3 +4,9 @@
 .env
 .env.local
 .env.*.local
+
+# ========================
+# DEPENDÊNCIAS
+# ========================
+node_modules/
+/generated/prisma
