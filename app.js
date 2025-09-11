@@ -1,17 +1,17 @@
-import express from 'express';
-import cors from 'cors';
+import express from "express";
+import cors from "cors";
+import authRoutes from "./src/routes/authRoutes.js";
 
-const app = express();
-app.use(cors());
+const app = express(); // Cria uma aplicação Express
+
+app.use(cors()); // Habilita CORS para todas as rotas
 
 // Rotas
-app.get('/ping', (req, res) => {
-  res.json({ message: 'pong' });
-});
+app.use("/auth", authRoutes);
+// aqui diz: “todas as rotas dentro de authRoutes vão estar disponíveis a partir de /auth”
 
 export default app;
-// O código acima configura um servidor Express básico com CORS habilitado e uma rota de teste /ping
+// O código acima exporta o app para ser usado em outro arquivo (server.js)
 
-
-
-
+// express: Framework que facilita criar e organizar um servidor web em Node.js, facilita criação de rotas, manipulação de requisições e respostas, etc.
+// cors: Middleware que libera ou controla requisições de frontends de outras origens (dominios/portas)
